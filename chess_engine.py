@@ -1,5 +1,5 @@
 class GameState:
-    def __set__(self, instance, value):
+    def __init__(self):
         # 8x8 2d list, each element of list is represented by 2 chars
         # 1st char is color, second char is piece type
         # '--' represents an empty space
