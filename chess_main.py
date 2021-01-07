@@ -1,5 +1,5 @@
 import pygame as p
-from chess_engine import GameState
+import chess_engine
 
 WIDTH = HEIGHT = 512  # total board width and height
 DIMENSION = 8  # number of squares on the board
@@ -10,6 +10,8 @@ IMAGES = {}
 """
 Loads the images into a global dictionary
 """
+
+
 def load_images():
     pieces = ['bR', 'bK', 'bB', 'bQ', 'bK', 'wR', 'wK', 'wB', 'wQ', 'wK', 'wP', 'bP']
     for piece in pieces:
@@ -21,6 +23,8 @@ def load_images():
 Responsible for all the graphics in current gamestate
 parameters: the pygame screen and the current board gamestate
 """
+
+
 def draw_game_state(screen, gs):
     # can add piece highlighting and stuff here
     # need to draw board before the pieces so the pieces are visible
@@ -32,6 +36,8 @@ def draw_game_state(screen, gs):
 Draws the base chess board
 parameters: the pygame screen
 """
+
+
 def draw_board(screen):
     # first color is beige for light squares, second is dark brown for dark squares
     colors = [p.Color(225, 198, 153), p.Color(133, 94, 66)]
@@ -45,6 +51,8 @@ def draw_board(screen):
 """
 Draws the pieces on the board using current gamestate
 """
+
+
 def draw_pieces(screen, board):
     for row in range(DIMENSION):
         for col in range(DIMENSION):
@@ -56,18 +64,42 @@ def draw_pieces(screen, board):
 """
 Main driver, handles user input and graphics
 """
+
+
 def main():
     p.init()
     screen = p.display.set_mode((WIDTH, HEIGHT))
     clock = p.time.Clock()
     screen.fill(p.Color("white"))
-    gs = GameState()
+    gs = chess_engine.GameState()
     load_images()
     running = True
+    currSq = ()  # current square the user selects (row, col)
+    playerClicks = []  # keeps track of player clicks [(first), (last)]
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
+            elif e.type == p.MOUSEBUTTONDOWN:
+                location = p.mouse.get_pos()  # (x,y) location of mouse
+                col = location[0]//SQ_SIZE
+                row = location[1]//SQ_SIZE
+                # make game does not count clicking the same square twice as a move
+                if currSq == (row, col):
+                    currSq = ()
+                    playerClicks = []
+                else:
+                    currSq = (row, col)
+                    playerClicks.append(currSq)
+                if len(playerClicks) == 2:
+                    # this is where the user is trying to make their move
+                    move = chess_engine.Move(playerClicks[0], playerClicks[1], gs.board)
+                    print(move.get_chess_notation())
+                    gs.make_move(move)
+                    # allow user to make another move
+                    currSq = ()
+                    playerClicks = []
+
         draw_game_state(screen, gs)
         clock.tick(MAX_FPS)
         p.display.flip()
