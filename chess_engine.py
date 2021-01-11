@@ -4,14 +4,14 @@ class GameState:
         # 1st char is color, second char is piece type
         # '--' represents an empty space
         self.board = [
-            ['bR', 'bK', 'bB', 'bQ', 'bK', 'bB', 'bK', 'bR'],
+            ['bR', 'bN', 'bB', 'bQ', 'bK', 'bB', 'bN', 'bR'],
             ['bP', 'bP', 'bP', 'bP', 'bP', 'bP', 'bP', 'bP'],
             ['--', '--', '--', '--', '--', '--', '--', '--'],
             ['--', '--', '--', '--', '--', '--', '--', '--'],
             ['--', '--', '--', '--', '--', '--', '--', '--'],
             ['--', '--', '--', '--', '--', '--', '--', '--'],
             ['wP', 'wP', 'wP', 'wP', 'wP', 'wP', 'wP', 'wP'],
-            ['wR', 'wK', 'wB', 'wQ', 'wK', 'wB', 'wK', 'wR'],
+            ['wR', 'wN', 'wB', 'wQ', 'wK', 'wB', 'wN', 'wR'],
         ]
         self.whiteToMove = True
         self.moveLog = []
@@ -23,6 +23,72 @@ class GameState:
         self.board[move.endRow][move.endCol] = move.pieceMoved
         self.moveLog.append(move)
         self.whiteToMove = False  # switch players turn
+
+    def undo_move(self):
+        if len(self.moveLog) != 0:
+            prevMove = self.moveLog.pop()
+            self.board[prevMove.startRow][prevMove.startCol] = prevMove.pieceMoved
+            self.board[prevMove.endRow][prevMove.endCol] = prevMove.pieceCapt
+            self.whiteToMove = not self.whiteToMove
+
+    def get_valid_moves(self):
+        return self.get_all_moves()
+
+    def get_all_moves(self):
+        moves = [Move((6,4), (4,4), self.board)]
+        for row in range(len(self.board)):
+            for col in range(len(self.board[row])):
+                turn = self.board[row][col][0]
+                if (turn == 'w' and self.whiteToMove) and (turn == 'b' and not self.whiteToMove):
+                    piece = self.board[row][col][1]
+                    if piece == 'P':
+                        self.get_pawn_moves(row, col, moves)
+                    if piece == 'R':
+                        self.get_rook_moves(row, col, moves)
+                    if piece == 'N':
+                        self.get_knight_moves(row, col, moves)
+                    if piece == 'B':
+                        self.get_bishop_moves(row, col, moves)
+                    if piece == 'Q':
+                        self.get_queen_moves(row, col, moves)
+                    if piece == 'K':
+                        self.get_king_moves(row, col, moves)
+        return moves
+    """
+    Gets all the pawn moves for the pawn at the given coordinates and add the moves to the list
+    """
+    def get_pawn_moves(self, row, col, moves):
+        pass
+
+    """
+    Gets all the rook moves for the rook at the given coordinates and add the moves to the list
+    """
+    def get_rook_moves(self, row, col, moves):
+        pass
+
+    """
+    Gets all the knight moves for the knight at the given coordinates and add the moves to the list
+    """
+    def get_knight_moves(self, row, col, moves):
+        pass
+
+    """
+    Gets all the bishop moves for the bishop at the given coordinates and add the moves to the list
+    """
+    def get_bishop_moves(self, row, col, moves):
+        pass
+
+    """
+    Gets all the queen moves for the queen at the given coordinates and add the moves to the list
+    """
+    def get_queen_moves(self, row, col, moves):
+        pass
+
+    """
+    Gets all the king moves for the king at the given coordinates and add the moves to the list
+    """
+    def get_king_moves(self, row, col, moves):
+        pass
 
 
 class Move:
@@ -39,6 +105,16 @@ class Move:
         self.endCol = endSq[1]
         self.pieceMoved = board[self.startRow][self.startCol]
         self.pieceCapt = board[self.endRow][self.endCol]
+        # given the current gamestate we give each move a unique Id
+        self.moveId = self.startRow * 1000 + self.startCol * 100 + self.endRow * 10 + self.endCol
+
+    """
+    Override the equals method
+    """
+    def __eq__(self, other):
+        if isinstance(other, Move):
+            return self.moveId == other.moveId
+        return False
 
     def get_chess_notation(self):
         return self.get_rank_file(self.startRow, self.startCol) + self.get_rank_file(self.endRow, self.endCol)

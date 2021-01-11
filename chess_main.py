@@ -13,7 +13,7 @@ Loads the images into a global dictionary
 
 
 def load_images():
-    pieces = ['bR', 'bK', 'bB', 'bQ', 'bK', 'wR', 'wK', 'wB', 'wQ', 'wK', 'wP', 'bP']
+    pieces = ['bR', 'bN', 'bB', 'bQ', 'bK', 'wR', 'wN', 'wB', 'wQ', 'wK', 'wP', 'bP']
     for piece in pieces:
         IMAGES[piece] = p.transform.scale(p.image.load("images/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
     # call images with IMAGES['wP']
@@ -72,6 +72,8 @@ def main():
     clock = p.time.Clock()
     screen.fill(p.Color("white"))
     gs = chess_engine.GameState()
+    validMoves = gs.get_valid_moves()
+    moveMade = False  # flag variable for when the user makes a valid move
     load_images()
     running = True
     currSq = ()  # current square the user selects (row, col)
@@ -80,10 +82,11 @@ def main():
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
+            # mouse handlers
             elif e.type == p.MOUSEBUTTONDOWN:
                 location = p.mouse.get_pos()  # (x,y) location of mouse
-                col = location[0]//SQ_SIZE
-                row = location[1]//SQ_SIZE
+                col = location[0] // SQ_SIZE
+                row = location[1] // SQ_SIZE
                 # make game does not count clicking the same square twice as a move
                 if currSq == (row, col):
                     currSq = ()
@@ -95,11 +98,21 @@ def main():
                     # this is where the user is trying to make their move
                     move = chess_engine.Move(playerClicks[0], playerClicks[1], gs.board)
                     print(move.get_chess_notation())
-                    gs.make_move(move)
+                    if move in validMoves:
+                        gs.make_move(move)
+                        moveMade = True
                     # allow user to make another move
                     currSq = ()
                     playerClicks = []
-
+            # key handlers
+            elif e.type == p.KEYDOWN:
+                if e.key == p.K_u:  # undo the move when u is pressed
+                    gs.undo_move()
+                    moveMade = True
+        # checks if a valid move was made then generate the valid moves for the player
+        if moveMade:
+            validMoves = gs.get_valid_moves()
+            moveMade = False
         draw_game_state(screen, gs)
         clock.tick(MAX_FPS)
         p.display.flip()
