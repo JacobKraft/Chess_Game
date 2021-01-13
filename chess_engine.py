@@ -7,8 +7,8 @@ class GameState:
             ['bR', 'bN', 'bB', 'bQ', 'bK', 'bB', 'bN', 'bR'],
             ['bP', 'bP', 'bP', 'bP', 'bP', 'bP', 'bP', 'bP'],
             ['--', '--', '--', '--', '--', '--', '--', '--'],
-            ['--', '--', '--', '--', '--', '--', '--', '--'],
-            ['--', '--', '--', '--', '--', '--', '--', '--'],
+            ['--', '--', '--', '--', 'wN', '--', '--', '--'],
+            ['wN', '--', '--', '--', '--', '--', '--', '--'],
             ['--', '--', '--', '--', '--', '--', '--', '--'],
             ['wP', 'wP', 'wP', 'wP', 'wP', 'wP', 'wP', 'wP'],
             ['wR', 'wN', 'wB', 'wQ', 'wK', 'wB', 'wN', 'wR'],
@@ -58,7 +58,6 @@ class GameState:
     Gets all the pawn moves for the pawn at the given coordinates and add the moves to the list
     """
     def get_pawn_moves(self, row, col, moves):
-        print(self.whiteToMove)
         if self.whiteToMove:  # white pawn moves
             if self.board[row - 1][col] == "--":  # move one square
                 moves.append(Move((row, col), (row - 1, col), self.board))
@@ -92,7 +91,41 @@ class GameState:
     Gets all the knight moves for the knight at the given coordinates and add the moves to the list
     """
     def get_knight_moves(self, row, col, moves):
-        pass
+        if self.whiteToMove:  # knight moves for white
+            if row - 1 >= 0 and col - 2 >= 0 and self.board[row - 1][col - 2][0] != 'w':
+                moves.append(Move((row, col), (row - 1, col - 2), self.board))
+            if row - 2 >= 0 and col - 1 >= 0 and self.board[row - 2][col - 1][0] != 'w':
+                moves.append(Move((row, col), (row - 2, col - 1), self.board))
+            if row - 2 >= 0 and col + 1 <= 7 and self.board[row - 2][col + 1][0] != 'w':
+                moves.append(Move((row, col), (row - 2, col + 1), self.board))
+            if row - 1 >= 0 and col + 2 <= 7 and self.board[row - 1][col + 2][0] != 'w':
+                moves.append(Move((row, col), (row - 1, col + 2), self.board))
+            if row + 1 <= 7 and col + 2 <= 7 and self.board[row + 1][col + 2][0] != 'w':
+                moves.append(Move((row, col), (row + 1, col + 2), self.board))
+            if row + 2 <= 7 and col + 1 <= 7 and self.board[row + 2][col + 1][0] != 'w':
+                moves.append(Move((row, col), (row + 2, col + 1), self.board))
+            if row + 2 <= 7 and col - 1 >= 0 and self.board[row + 2][col - 1][0] != 'w':
+                moves.append(Move((row, col), (row + 2, col - 1), self.board))
+            if row + 1 <= 7 and col - 2 >= 0 and self.board[row + 1][col - 2][0] != 'w':
+                moves.append(Move((row, col), (row + 1, col - 2), self.board))
+        else:  # knight moves for black
+            if row - 1 >= 0 and col - 2 >= 0 and self.board[row - 1][col - 2][0] != 'b':
+                moves.append(Move((row, col), (row - 1, col - 2), self.board))
+            if row - 2 >= 0 and col - 1 >= 0 and self.board[row - 2][col - 1][0] != 'b':
+                moves.append(Move((row, col), (row - 2, col - 1), self.board))
+            if row - 2 >= 0 and col + 1 <= 7 and self.board[row - 2][col + 1][0] != 'b':
+                moves.append(Move((row, col), (row - 2, col + 1), self.board))
+            if row - 1 >= 0 and col + 2 <= 7 and self.board[row - 1][col + 2][0] != 'b':
+                moves.append(Move((row, col), (row - 1, col + 2), self.board))
+            if row + 1 <= 7 and col + 2 <= 7 and self.board[row + 1][col + 2][0] != 'b':
+                moves.append(Move((row, col), (row + 1, col + 2), self.board))
+            if row + 2 <= 7 and col + 1 <= 7 and self.board[row + 2][col + 1][0] != 'b':
+                moves.append(Move((row, col), (row + 2, col + 1), self.board))
+            if row + 2 <= 7 and col - 1 >= 0 and self.board[row + 2][col - 1][0] != 'b':
+                moves.append(Move((row, col), (row + 2, col - 1), self.board))
+            if row + 1 <= 7 and col - 2 >= 0 and self.board[row + 1][col - 2][0] != 'b':
+                moves.append(Move((row, col), (row + 1, col - 2), self.board))
+
 
     """
     Gets all the bishop moves for the bishop at the given coordinates and add the moves to the list
