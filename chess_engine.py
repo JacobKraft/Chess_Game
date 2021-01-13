@@ -72,7 +72,7 @@ class GameState:
         else:  # black pawn moves
             if self.board[row + 1][col] == '--':  # move one square
                 moves.append(Move((row, col), (row + 1, col), self.board))
-                if self.board[row + 2][col] == '--':  # move two squares
+                if row == 1 and self.board[row + 2][col] == '--':  # move two squares
                     moves.append(Move((row, col), (row + 2, col), self.board))
             if col - 1 >= 0:
                 if self.board[row + 1][col - 1][0] == 'w':  # capture to left diagonal
@@ -91,41 +91,24 @@ class GameState:
     Gets all the knight moves for the knight at the given coordinates and add the moves to the list
     """
     def get_knight_moves(self, row, col, moves):
-        if self.whiteToMove:  # knight moves for white
-            if row - 1 >= 0 and col - 2 >= 0 and self.board[row - 1][col - 2][0] != 'w':
+        friendlyColor = 'w' if self.whiteToMove else 'b'  # used to make it so same color cant capture same color
+        if self.whiteToMove:
+            if row - 1 >= 0 and col - 2 >= 0 and self.board[row - 1][col - 2][0] != friendlyColor:
                 moves.append(Move((row, col), (row - 1, col - 2), self.board))
-            if row - 2 >= 0 and col - 1 >= 0 and self.board[row - 2][col - 1][0] != 'w':
+            if row - 2 >= 0 and col - 1 >= 0 and self.board[row - 2][col - 1][0] != friendlyColor:
                 moves.append(Move((row, col), (row - 2, col - 1), self.board))
-            if row - 2 >= 0 and col + 1 <= 7 and self.board[row - 2][col + 1][0] != 'w':
+            if row - 2 >= 0 and col + 1 <= 7 and self.board[row - 2][col + 1][0] != friendlyColor:
                 moves.append(Move((row, col), (row - 2, col + 1), self.board))
-            if row - 1 >= 0 and col + 2 <= 7 and self.board[row - 1][col + 2][0] != 'w':
+            if row - 1 >= 0 and col + 2 <= 7 and self.board[row - 1][col + 2][0] != friendlyColor:
                 moves.append(Move((row, col), (row - 1, col + 2), self.board))
-            if row + 1 <= 7 and col + 2 <= 7 and self.board[row + 1][col + 2][0] != 'w':
+            if row + 1 <= 7 and col + 2 <= 7 and self.board[row + 1][col + 2][0] != friendlyColor:
                 moves.append(Move((row, col), (row + 1, col + 2), self.board))
-            if row + 2 <= 7 and col + 1 <= 7 and self.board[row + 2][col + 1][0] != 'w':
+            if row + 2 <= 7 and col + 1 <= 7 and self.board[row + 2][col + 1][0] != friendlyColor:
                 moves.append(Move((row, col), (row + 2, col + 1), self.board))
-            if row + 2 <= 7 and col - 1 >= 0 and self.board[row + 2][col - 1][0] != 'w':
+            if row + 2 <= 7 and col - 1 >= 0 and self.board[row + 2][col - 1][0] != friendlyColor:
                 moves.append(Move((row, col), (row + 2, col - 1), self.board))
-            if row + 1 <= 7 and col - 2 >= 0 and self.board[row + 1][col - 2][0] != 'w':
+            if row + 1 <= 7 and col - 2 >= 0 and self.board[row + 1][col - 2][0] != friendlyColor:
                 moves.append(Move((row, col), (row + 1, col - 2), self.board))
-        else:  # knight moves for black
-            if row - 1 >= 0 and col - 2 >= 0 and self.board[row - 1][col - 2][0] != 'b':
-                moves.append(Move((row, col), (row - 1, col - 2), self.board))
-            if row - 2 >= 0 and col - 1 >= 0 and self.board[row - 2][col - 1][0] != 'b':
-                moves.append(Move((row, col), (row - 2, col - 1), self.board))
-            if row - 2 >= 0 and col + 1 <= 7 and self.board[row - 2][col + 1][0] != 'b':
-                moves.append(Move((row, col), (row - 2, col + 1), self.board))
-            if row - 1 >= 0 and col + 2 <= 7 and self.board[row - 1][col + 2][0] != 'b':
-                moves.append(Move((row, col), (row - 1, col + 2), self.board))
-            if row + 1 <= 7 and col + 2 <= 7 and self.board[row + 1][col + 2][0] != 'b':
-                moves.append(Move((row, col), (row + 1, col + 2), self.board))
-            if row + 2 <= 7 and col + 1 <= 7 and self.board[row + 2][col + 1][0] != 'b':
-                moves.append(Move((row, col), (row + 2, col + 1), self.board))
-            if row + 2 <= 7 and col - 1 >= 0 and self.board[row + 2][col - 1][0] != 'b':
-                moves.append(Move((row, col), (row + 2, col - 1), self.board))
-            if row + 1 <= 7 and col - 2 >= 0 and self.board[row + 1][col - 2][0] != 'b':
-                moves.append(Move((row, col), (row + 1, col - 2), self.board))
-
 
     """
     Gets all the bishop moves for the bishop at the given coordinates and add the moves to the list
