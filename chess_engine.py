@@ -22,7 +22,7 @@ class GameState:
         # moves the piece to where the player wants
         self.board[move.endRow][move.endCol] = move.pieceMoved
         self.moveLog.append(move)
-        self.whiteToMove = False  # switch players turn
+        self.whiteToMove = not self.whiteToMove  # switch players turn
 
     def undo_move(self):
         if len(self.moveLog) != 0:
@@ -35,11 +35,11 @@ class GameState:
         return self.get_all_moves()
 
     def get_all_moves(self):
-        moves = [Move((6,4), (4,4), self.board)]
+        moves = []
         for row in range(len(self.board)):
             for col in range(len(self.board[row])):
                 turn = self.board[row][col][0]
-                if (turn == 'w' and self.whiteToMove) and (turn == 'b' and not self.whiteToMove):
+                if (turn == 'w' and self.whiteToMove) or (turn == 'b' and not self.whiteToMove):
                     piece = self.board[row][col][1]
                     if piece == 'P':
                         self.get_pawn_moves(row, col, moves)
@@ -58,7 +58,29 @@ class GameState:
     Gets all the pawn moves for the pawn at the given coordinates and add the moves to the list
     """
     def get_pawn_moves(self, row, col, moves):
-        pass
+        print(self.whiteToMove)
+        if self.whiteToMove:  # white pawn moves
+            if self.board[row - 1][col] == "--":  # move one square
+                moves.append(Move((row, col), (row - 1, col), self.board))
+                if row == 6 and self.board[row - 2][col] == "--":  # move two square
+                    moves.append(Move((row, col), (row - 2, col), self.board))
+            if col - 1 >= 0:
+                if self.board[row - 1][col - 1][0] == 'b':  # capture to left diagonal
+                    moves.append(Move((row, col), (row - 1, col - 1), self.board))
+            if col + 1 <= 7:
+                if self.board[row - 1][col + 1][0] == 'b':  # capture to right diagonal
+                    moves.append(Move((row, col), (row - 1, col + 1), self.board))
+        else:  # black pawn moves
+            if self.board[row + 1][col] == '--':  # move one square
+                moves.append(Move((row, col), (row + 1, col), self.board))
+                if self.board[row + 2][col] == '--':  # move two squares
+                    moves.append(Move((row, col), (row + 2, col), self.board))
+            if col - 1 >= 0:
+                if self.board[row + 1][col - 1][0] == 'w':  # capture to left diagonal
+                    moves.append(Move((row, col), (row + 1, col - 1), self.board))
+            if col + 1 <= 7:
+                if self.board[row + 1][col + 1][0] == 'w':  # capture to right diagonal
+                    moves.append(Move((row, col), (row + 1, col + 1), self.board))
 
     """
     Gets all the rook moves for the rook at the given coordinates and add the moves to the list
