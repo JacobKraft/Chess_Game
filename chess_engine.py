@@ -7,14 +7,19 @@ class GameState:
             ['bR', 'bN', 'bB', 'bQ', 'bK', 'bB', 'bN', 'bR'],
             ['bP', 'bP', 'bP', 'bP', 'bP', 'bP', 'bP', 'bP'],
             ['--', '--', '--', '--', '--', '--', '--', '--'],
-            ['--', '--', '--', '--', 'wN', '--', '--', '--'],
-            ['wN', '--', '--', '--', '--', '--', '--', '--'],
+            ['--', '--', '--', '--', '--', '--', '--', '--'],
+            ['--', '--', '--', '--', '--', '--', '--', '--'],
             ['--', '--', '--', '--', '--', '--', '--', '--'],
             ['wP', 'wP', 'wP', 'wP', 'wP', 'wP', 'wP', 'wP'],
             ['wR', 'wN', 'wB', 'wQ', 'wK', 'wB', 'wN', 'wR'],
         ]
         self.whiteToMove = True
         self.moveLog = []
+        # variables to track where to king moves
+        self.whiteKingLoc = (7, 4)
+        self.blackKingLoc = (0, 4)
+        self.checkMate = False
+        self.staleMate = False
 
     def make_move(self, move):
         # leaves empty space from position moved
@@ -23,6 +28,11 @@ class GameState:
         self.board[move.endRow][move.endCol] = move.pieceMoved
         self.moveLog.append(move)
         self.whiteToMove = not self.whiteToMove  # switch players turn
+        # update king's location if it was moved
+        if move.pieceMoved == 'wK':
+            self.whiteKingLoc = (move.endRow, move.endCol)
+        elif move.pieceMoved == 'bK':
+            self.blackKingLoc = (move.endRow, move.endCol)
 
     def undo_move(self):
         if len(self.moveLog) != 0:
@@ -30,9 +40,54 @@ class GameState:
             self.board[prevMove.startRow][prevMove.startCol] = prevMove.pieceMoved
             self.board[prevMove.endRow][prevMove.endCol] = prevMove.pieceCapt
             self.whiteToMove = not self.whiteToMove
+            # update king's location if it was moved
+            if prevMove.pieceMoved == 'wK':
+                self.whiteKingLoc = (prevMove.startRow, prevMove.startCol)
+            elif prevMove.pieceMoved == 'bK':
+                self.blackKingLoc = (prevMove.startRow, prevMove.startCol)
 
     def get_valid_moves(self):
-        return self.get_all_moves()
+        moves = self.get_all_moves()
+        for i in range(len(moves) - 1, -1, -1):
+            self.make_move(moves[i])
+            self.whiteToMove = not self.whiteToMove
+            # if king would be in check, it is not a valid move
+            if self.in_check():
+                moves.remove(moves[i])
+            self.whiteToMove = not self.whiteToMove
+            self.undo_move()
+        if len(moves) == 0:  # means it is either checkmate or stalemate
+            if self.in_check():
+                self.checkMate = True
+            else:
+                self.staleMate = True
+        else:
+            self.checkMate = False
+            self.staleMate = False
+        return moves
+
+    """
+    Determines if player is in check
+    """
+    def in_check(self):
+        if self.whiteToMove:
+            return self.square_in_attack(self.whiteKingLoc[0], self.whiteKingLoc[1])
+        else:
+            return self.square_in_attack(self.blackKingLoc[0], self.blackKingLoc[1])
+
+
+    """
+    Determine if the opponent can attack the (row, col) position
+    """
+    def square_in_attack(self, row, col):
+        # switch players turn to look at the opponents moves
+        self.whiteToMove = not self.whiteToMove
+        oppMoves = self.get_all_moves()
+        self.whiteToMove = not self.whiteToMove  # switch turn back to player
+        for move in oppMoves:
+            if move.endRow == row and move.endCol == col:  # (row, col) square is under attack
+                return True
+        return False
 
     def get_all_moves(self):
         moves = []
@@ -54,9 +109,11 @@ class GameState:
                     if piece == 'K':
                         self.get_king_moves(row, col, moves)
         return moves
+
     """
     Gets all the pawn moves for the pawn at the given coordinates and add the moves to the list
     """
+
     def get_pawn_moves(self, row, col, moves):
         if self.whiteToMove:  # white pawn moves
             if self.board[row - 1][col] == "--":  # move one square
@@ -84,49 +141,104 @@ class GameState:
     """
     Gets all the rook moves for the rook at the given coordinates and add the moves to the list
     """
+
     def get_rook_moves(self, row, col, moves):
-        pass
+        directions = ((-1, 0), (0, -1), (1, 0), (0, 1))  # rooks can move in straight lines each way
+        friendlyColor = 'w' if self.whiteToMove else 'b'  # used to make it so same color cant capture same color
+        for d in directions:
+            for i in range(1, 8):
+                endRow = row + d[0] * i
+                endCol = col + d[1] * i
+                if 0 <= endRow <= 7 and 0 <= endCol <= 7:  # makes sure its on the board
+                    endPiece = self.board[endRow][endCol]
+                    if endPiece == '--':  # can move to end if spot is empty
+                        moves.append(Move((row, col), (endRow, endCol), self.board))
+                    elif endPiece[0] != friendlyColor:  # can capture enemy piece
+                        moves.append(Move((row, col), (endRow, endCol), self.board))
+                        break
+                    else:  # can not stack friendly pieces -> do nothing
+                        break
+                else:  # we do not need to look at spaces off the board
+                    break
 
     """
     Gets all the knight moves for the knight at the given coordinates and add the moves to the list
     """
+
     def get_knight_moves(self, row, col, moves):
         friendlyColor = 'w' if self.whiteToMove else 'b'  # used to make it so same color cant capture same color
-        if self.whiteToMove:
-            if row - 1 >= 0 and col - 2 >= 0 and self.board[row - 1][col - 2][0] != friendlyColor:
-                moves.append(Move((row, col), (row - 1, col - 2), self.board))
-            if row - 2 >= 0 and col - 1 >= 0 and self.board[row - 2][col - 1][0] != friendlyColor:
-                moves.append(Move((row, col), (row - 2, col - 1), self.board))
-            if row - 2 >= 0 and col + 1 <= 7 and self.board[row - 2][col + 1][0] != friendlyColor:
-                moves.append(Move((row, col), (row - 2, col + 1), self.board))
-            if row - 1 >= 0 and col + 2 <= 7 and self.board[row - 1][col + 2][0] != friendlyColor:
-                moves.append(Move((row, col), (row - 1, col + 2), self.board))
-            if row + 1 <= 7 and col + 2 <= 7 and self.board[row + 1][col + 2][0] != friendlyColor:
-                moves.append(Move((row, col), (row + 1, col + 2), self.board))
-            if row + 2 <= 7 and col + 1 <= 7 and self.board[row + 2][col + 1][0] != friendlyColor:
-                moves.append(Move((row, col), (row + 2, col + 1), self.board))
-            if row + 2 <= 7 and col - 1 >= 0 and self.board[row + 2][col - 1][0] != friendlyColor:
-                moves.append(Move((row, col), (row + 2, col - 1), self.board))
-            if row + 1 <= 7 and col - 2 >= 0 and self.board[row + 1][col - 2][0] != friendlyColor:
-                moves.append(Move((row, col), (row + 1, col - 2), self.board))
+        if row - 1 >= 0 and col - 2 >= 0 and self.board[row - 1][col - 2][0] != friendlyColor:
+            moves.append(Move((row, col), (row - 1, col - 2), self.board))
+        if row - 2 >= 0 and col - 1 >= 0 and self.board[row - 2][col - 1][0] != friendlyColor:
+            moves.append(Move((row, col), (row - 2, col - 1), self.board))
+        if row - 2 >= 0 and col + 1 <= 7 and self.board[row - 2][col + 1][0] != friendlyColor:
+            moves.append(Move((row, col), (row - 2, col + 1), self.board))
+        if row - 1 >= 0 and col + 2 <= 7 and self.board[row - 1][col + 2][0] != friendlyColor:
+            moves.append(Move((row, col), (row - 1, col + 2), self.board))
+        if row + 1 <= 7 and col + 2 <= 7 and self.board[row + 1][col + 2][0] != friendlyColor:
+            moves.append(Move((row, col), (row + 1, col + 2), self.board))
+        if row + 2 <= 7 and col + 1 <= 7 and self.board[row + 2][col + 1][0] != friendlyColor:
+            moves.append(Move((row, col), (row + 2, col + 1), self.board))
+        if row + 2 <= 7 and col - 1 >= 0 and self.board[row + 2][col - 1][0] != friendlyColor:
+            moves.append(Move((row, col), (row + 2, col - 1), self.board))
+        if row + 1 <= 7 and col - 2 >= 0 and self.board[row + 1][col - 2][0] != friendlyColor:
+            moves.append(Move((row, col), (row + 1, col - 2), self.board))
 
     """
     Gets all the bishop moves for the bishop at the given coordinates and add the moves to the list
     """
+
     def get_bishop_moves(self, row, col, moves):
-        pass
+        directions = ((-1, -1), (-1, 1), (1, 1), (1, -1))  # bishops can move on the diagonals each way
+        friendlyColor = 'w' if self.whiteToMove else 'b'  # used to make it so same color cant capture same color
+        for d in directions:
+            for i in range(1, 8):
+                endRow = row + d[0] * i
+                endCol = col + d[1] * i
+                if 0 <= endRow <= 7 and 0 <= endCol <= 7:  # makes sure its on the board
+                    endPiece = self.board[endRow][endCol]
+                    if endPiece == '--':  # can move to end if spot is empty
+                        moves.append(Move((row, col), (endRow, endCol), self.board))
+                    elif endPiece[0] != friendlyColor:  # can capture enemy piece
+                        moves.append(Move((row, col), (endRow, endCol), self.board))
+                        break
+                    else:  # can not stack friendly pieces -> do nothing
+                        break
+                else:  # we do not need to look at spaces off the board
+                    break
 
     """
     Gets all the queen moves for the queen at the given coordinates and add the moves to the list
     """
+
     def get_queen_moves(self, row, col, moves):
-        pass
+        # the queen's moves are just the sum of the rook and bishop moves
+        self.get_rook_moves(row, col, moves)
+        self.get_bishop_moves(row, col, moves)
 
     """
     Gets all the king moves for the king at the given coordinates and add the moves to the list
     """
+
     def get_king_moves(self, row, col, moves):
-        pass
+        friendlyColor = 'w' if self.whiteToMove else 'b'  # used to make it so same color cant capture same color
+        print('poop')
+        if row - 1 >= 0 and col - 1 >= 0 and self.board[row - 1][col - 1][0] != friendlyColor:
+            moves.append(Move((row, col), (row - 1, col - 1), self.board))
+        if row - 1 >= 0 and self.board[row - 1][col][0] != friendlyColor:
+            moves.append(Move((row, col), (row - 1, col), self.board))
+        if row - 1 >= 0 and col + 1 <= 7 and self.board[row - 1][col + 1][0] != friendlyColor:
+            moves.append(Move((row, col), (row - 1, col + 1), self.board))
+        if col + 1 <= 7 and self.board[row][col + 1][0] != friendlyColor:
+            moves.append(Move((row, col), (row, col + 1), self.board))
+        if row + 1 <= 7 and col + 1 <= 7 and self.board[row + 1][col + 1][0] != friendlyColor:
+            moves.append(Move((row, col), (row + 1, col + 1), self.board))
+        if row + 1 <= 7 and self.board[row + 1][col][0] != friendlyColor:
+            moves.append(Move((row, col), (row + 1, col), self.board))
+        if row + 1 <= 7 and col - 1 >= 0 and self.board[row + 1][col - 1][0] != friendlyColor:
+            moves.append(Move((row, col), (row + 1, col - 1), self.board))
+        if col - 1 >= 0 and self.board[row][col - 1][0] != friendlyColor:
+            moves.append(Move((row, col), (row, col - 1), self.board))
 
 
 class Move:
@@ -149,6 +261,7 @@ class Move:
     """
     Override the equals method
     """
+
     def __eq__(self, other):
         if isinstance(other, Move):
             return self.moveId == other.moveId

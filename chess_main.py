@@ -87,7 +87,7 @@ def main():
                 location = p.mouse.get_pos()  # (x,y) location of mouse
                 col = location[0] // SQ_SIZE
                 row = location[1] // SQ_SIZE
-                # make game does not count clicking the same square twice as a move
+                # make game not count clicking the same square twice as a move
                 if currSq == (row, col):
                     currSq = ()
                     playerClicks = []
