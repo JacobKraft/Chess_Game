@@ -98,12 +98,15 @@ def main():
                     # this is where the user is trying to make their move
                     move = chess_engine.Move(playerClicks[0], playerClicks[1], gs.board)
                     print(move.get_chess_notation())
-                    if move in validMoves:
-                        gs.make_move(move)
-                        moveMade = True
-                    # allow user to make another move
-                    currSq = ()
-                    playerClicks = []
+                    for i in range(len(validMoves)):
+                        if move == validMoves[i]:
+                            gs.make_move(validMoves[i])
+                            moveMade = True
+                            # allow user to make another move
+                            currSq = ()
+                            playerClicks = []
+                    if not moveMade:
+                        playerClicks = [currSq]
             # key handlers
             elif e.type == p.KEYDOWN:
                 if e.key == p.K_u:  # undo the move when u is pressed
