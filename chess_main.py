@@ -113,6 +113,21 @@ def draw_pieces(screen, board):
 
 
 """
+Draws the endgame text
+"""
+
+
+def draw_text(screen, text):
+    font = p.font.SysFont('Helvitca', 32, True, False)
+    textObject = font.render(text, True, p.Color('Gray'))
+    textLocation = p.Rect(0, 0, WIDTH, HEIGHT).move(WIDTH / 2 - textObject.get_width() / 2,
+                                                    HEIGHT / 2 - textObject.get_height() / 2)
+    screen.blit(textObject, textLocation)
+    textObject = font.render(text, True, p.Color('Black'))
+    screen.blit(textObject, textLocation.move(2, 2))
+
+
+"""
 Main driver, handles user input and graphics
 """
 
@@ -130,41 +145,50 @@ def main():
     currSq = ()  # current square the user selects (row, col)
     playerClicks = []  # keeps track of player clicks [(first), (last)]
     animate = False  # variable for when to animate the move
+    gameOver = False
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
             # mouse handlers
             elif e.type == p.MOUSEBUTTONDOWN:
-                location = p.mouse.get_pos()  # (x,y) location of mouse
-                col = location[0] // SQ_SIZE
-                row = location[1] // SQ_SIZE
-                # make game not count clicking the same square twice as a move
-                if currSq == (row, col):
-                    currSq = ()
-                    playerClicks = []
-                else:
-                    currSq = (row, col)
-                    playerClicks.append(currSq)
-                if len(playerClicks) == 2:
-                    # this is where the user is trying to make their move
-                    move = chess_engine.Move(playerClicks[0], playerClicks[1], gs.board)
-                    print(move.get_chess_notation())
-                    for i in range(len(validMoves)):
-                        if move == validMoves[i]:
-                            gs.make_move(validMoves[i])
-                            moveMade = True
-                            animate = True
-                            # allow user to make another move
-                            currSq = ()
-                            playerClicks = []
-                    if not moveMade:
-                        playerClicks = [currSq]
+                if not gameOver:
+                    location = p.mouse.get_pos()  # (x,y) location of mouse
+                    col = location[0] // SQ_SIZE
+                    row = location[1] // SQ_SIZE
+                    # make game not count clicking the same square twice as a move
+                    if currSq == (row, col):
+                        currSq = ()
+                        playerClicks = []
+                    else:
+                        currSq = (row, col)
+                        playerClicks.append(currSq)
+                    if len(playerClicks) == 2:
+                        # this is where the user is trying to make their move
+                        move = chess_engine.Move(playerClicks[0], playerClicks[1], gs.board)
+                        print(move.get_chess_notation())
+                        for i in range(len(validMoves)):
+                            if move == validMoves[i]:
+                                gs.make_move(validMoves[i])
+                                moveMade = True
+                                animate = True
+                                # allow user to make another move
+                                currSq = ()
+                                playerClicks = []
+                        if not moveMade:
+                            playerClicks = [currSq]
             # key handlers
             elif e.type == p.KEYDOWN:
                 if e.key == p.K_u:  # undo the move when u is pressed
                     gs.undo_move()
                     moveMade = True
+                    animate = False
+                if e.key == p.K_r:  # reset board when pressed
+                    gs = chess_engine.GameState()
+                    validMoves = gs.get_valid_moves()
+                    currSq = ()
+                    playerClicks = []
+                    moveMade = False
                     animate = False
         # checks if a valid move was made then generate the valid moves for the player
         if moveMade:
@@ -174,6 +198,18 @@ def main():
             moveMade = False
             animate = False
         draw_game_state(screen, gs, validMoves, currSq)
+
+        # check if the game is over
+        if gs.checkMate:
+            gameOver = True
+            if gs.whiteToMove:
+                draw_text(screen, 'Black wins by checkmate')
+            else:
+                draw_text(screen, 'White wins by checkmate')
+        elif gs.staleMate:
+            gameOver = True
+            draw_text(screen, 'Stalemate')
+
         clock.tick(MAX_FPS)
         p.display.flip()
 
