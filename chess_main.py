@@ -20,16 +20,39 @@ def load_images():
 
 
 """
+Highlight selected square and piece's available moves
+"""
+
+
+def highlight_square(screen, gs, validMoves, currSq):
+    if currSq != ():
+        row, col = currSq
+        if gs.board[row][col][0] == ('w' if gs.whiteToMove else 'b'):  # checks if sqSelected is a moveable piece
+            # highlight selected square
+            s = p.Surface((SQ_SIZE, SQ_SIZE))
+            s.set_alpha(75)
+            s.fill(p.Color('green'))
+            screen.blit(s, (col * SQ_SIZE, row * SQ_SIZE))
+            # highlight valid moves
+            s.fill(p.Color('yellow'))
+            for move in validMoves:
+                if move.startRow == row and move.startCol == col:
+                    screen.blit(s, (SQ_SIZE * move.endCol, SQ_SIZE * move.endRow))
+
+
+
+"""
 Responsible for all the graphics in current gamestate
 parameters: the pygame screen and the current board gamestate
 """
 
 
-def draw_game_state(screen, gs):
-    # can add piece highlighting and stuff here
+def draw_game_state(screen, gs, validMoves, currSq):
     # need to draw board before the pieces so the pieces are visible
     draw_board(screen)  # draw the squares
+    highlight_square(screen, gs, validMoves, currSq)
     draw_pieces(screen, gs.board)  # draw the pieces
+
 
 
 """
@@ -116,7 +139,7 @@ def main():
         if moveMade:
             validMoves = gs.get_valid_moves()
             moveMade = False
-        draw_game_state(screen, gs)
+        draw_game_state(screen, gs, validMoves, currSq)
         clock.tick(MAX_FPS)
         p.display.flip()
 
