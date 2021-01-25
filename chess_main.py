@@ -25,6 +25,7 @@ Highlight selected square and piece's available moves
 
 
 def highlight_square(screen, gs, validMoves, currSq):
+    # TODO: add in last move highlights
     if currSq != ():
         row, col = currSq
         if gs.board[row][col][0] == ('w' if gs.whiteToMove else 'b'):  # checks if sqSelected is a moveable piece
@@ -40,7 +41,6 @@ def highlight_square(screen, gs, validMoves, currSq):
                     screen.blit(s, (SQ_SIZE * move.endCol, SQ_SIZE * move.endRow))
 
 
-
 """
 Responsible for all the graphics in current gamestate
 parameters: the pygame screen and the current board gamestate
@@ -54,7 +54,6 @@ def draw_game_state(screen, gs, validMoves, currSq):
     draw_pieces(screen, gs.board)  # draw the pieces
 
 
-
 """
 Draws the base chess board
 parameters: the pygame screen
@@ -63,12 +62,41 @@ parameters: the pygame screen
 
 def draw_board(screen):
     # first color is beige for light squares, second is dark brown for dark squares
+    global colors
     colors = [p.Color(225, 198, 153), p.Color(133, 94, 66)]
     for row in range(DIMENSION):
         for col in range(DIMENSION):
             color = colors[(row + col) % 2]
             rectangle = p.Rect(col * SQ_SIZE, row * SQ_SIZE, SQ_SIZE, SQ_SIZE)
             p.draw.rect(screen, color, rectangle)
+
+
+""""
+Animates a piece's move
+"""
+
+
+def animate_move(move, screen, board, clock):
+    global colors
+    dR = move.endRow - move.startRow
+    dC = move.endCol - move.startCol
+    framesPerSquare = 5  # frames it takes to move each square
+    frameCount = (abs(dR) + abs(dC)) * framesPerSquare
+    for frame in range(frameCount + 1):
+        row, col = (move.startRow + dR * (frame / frameCount), move.startCol + dC * (frame / frameCount))
+        draw_board(screen)
+        draw_pieces(screen, board)
+        # erase piece from its ending square
+        color = colors[(move.endRow + move.endCol) % 2]
+        endSq = p.Rect(move.endCol * SQ_SIZE, move.endRow * SQ_SIZE, SQ_SIZE, SQ_SIZE)
+        p.draw.rect(screen, color, endSq)
+        # draw captured piece
+        if move.pieceCapt != '--':
+            screen.blit(IMAGES[move.pieceCapt], endSq)
+        # draw moving piece
+        screen.blit(IMAGES[move.pieceMoved], p.Rect(col * SQ_SIZE, row * SQ_SIZE, SQ_SIZE, SQ_SIZE))
+        p.display.flip()
+        clock.tick(60)
 
 
 """
@@ -101,6 +129,7 @@ def main():
     running = True
     currSq = ()  # current square the user selects (row, col)
     playerClicks = []  # keeps track of player clicks [(first), (last)]
+    animate = False  # variable for when to animate the move
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
@@ -125,6 +154,7 @@ def main():
                         if move == validMoves[i]:
                             gs.make_move(validMoves[i])
                             moveMade = True
+                            animate = True
                             # allow user to make another move
                             currSq = ()
                             playerClicks = []
@@ -135,10 +165,14 @@ def main():
                 if e.key == p.K_u:  # undo the move when u is pressed
                     gs.undo_move()
                     moveMade = True
+                    animate = False
         # checks if a valid move was made then generate the valid moves for the player
         if moveMade:
+            if animate:
+                animate_move(gs.moveLog[-1], screen, gs.board, clock)
             validMoves = gs.get_valid_moves()
             moveMade = False
+            animate = False
         draw_game_state(screen, gs, validMoves, currSq)
         clock.tick(MAX_FPS)
         p.display.flip()
