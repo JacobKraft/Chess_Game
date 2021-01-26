@@ -25,20 +25,26 @@ Highlight selected square and piece's available moves
 
 
 def highlight_square(screen, gs, validMoves, currSq):
-    # TODO: add in last move highlights
+    s = p.Surface((SQ_SIZE, SQ_SIZE))
+    s.set_alpha(100)
+    # highlight the previous opponent move if there has been one
+    if len(gs.moveLog) >= 1:
+        lmove = gs.moveLog[-1]  # last move
+        s.fill(p.Color(255, 255, 102))  # light yellow for highlighing previous move
+        screen.blit(s, (lmove.endCol * SQ_SIZE, lmove.endRow * SQ_SIZE))
+        screen.blit(s, (lmove.startCol * SQ_SIZE, lmove.startRow * SQ_SIZE))
     if currSq != ():
         row, col = currSq
         if gs.board[row][col][0] == ('w' if gs.whiteToMove else 'b'):  # checks if sqSelected is a moveable piece
             # highlight selected square
-            s = p.Surface((SQ_SIZE, SQ_SIZE))
-            s.set_alpha(75)
-            s.fill(p.Color('green'))
+            s.fill(p.Color(0, 0, 128))  # darker blue for highlighting current piece
             screen.blit(s, (col * SQ_SIZE, row * SQ_SIZE))
             # highlight valid moves
-            s.fill(p.Color('yellow'))
+            s.fill(p.Color(75, 169, 200))  # light blue for highlighting valid moves
             for move in validMoves:
                 if move.startRow == row and move.startCol == col:
                     screen.blit(s, (SQ_SIZE * move.endCol, SQ_SIZE * move.endRow))
+
 
 
 """
