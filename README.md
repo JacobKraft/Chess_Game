@@ -10,5 +10,5 @@ the actual chess engine, where valid moves are generated and the rules of chess 
   - How to use pygame library to display a game board with animations
   
 <p>
-  <img src="images/base.jpg" width="200"> <img src="images/midgame.jpg" width="200"> <img src="images/endgame.jpg" width="200">
+  <img src="git_images/base.jpg" width="200"> <img src="git_images/midgame.jpg" width="200"> <img src="git_images/endgame.jpg" width="200">
 </p>
